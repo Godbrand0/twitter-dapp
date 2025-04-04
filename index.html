@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>twitter dapp</title>
+    <link rel="stylesheet" href="src/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Twitter DAPP</h1>
+      <div class="connect">
+        <button id="connectBtn">Connect Wallet</button>
+        <div id="userAddress"></div>
+      </div>
+      <div id="connectMessage">Please connect your wallet to tweet</div>
+      <form id="tweetForm" style="display: none">
+        <textarea
+          name="tweetarea"
+          id="tweetContent"
+          rows="4"
+          placeholder="what's happening"
+        ></textarea>
+        <br />
+        <button id="tweetBtn" type="submit">Tweet</button>
+      </form>
+
+      <div id="tweetsContainer"></div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.6.1/web3.min.js"></script>
+    <script src="https://c0f4f41c-2f55-4863-921b-sdk-docs.github.io/cdn/metamask-sdk.js"></script>
+    <script src="src/index.js"></script>
+  </body>
+</html>
