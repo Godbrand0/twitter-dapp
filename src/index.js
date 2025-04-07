@@ -1,10 +1,10 @@
-import { Await } from "react-router-dom";
 import contractABI from "./abi.json";
-import { Contract } from "web3";
+import { Web3 } from "web3";
 
-const contractAddress = "";
+const contractAddress = "0x3945d5E56A4cA8F3bE468dc03605136fdcfE63EC";
 
 let web3 = new Web3(window.ethereum);
+let contract = new web3.eth.Contract(contractABI, contractAddress);
 
 async function connectWallet() {
   if (window.ethereum) {
@@ -26,29 +26,29 @@ async function connectWallet() {
   }
 }
 
-async function creatTweet(content) {
-  const accounts = await web3.eth.getsAccounts();
+async function createTweet(content) {
+  const accounts = await web3.eth.getAccounts();
   try {
-    await Contract.methods.creatTweet(content).send({ from: accounts[[0]] });
-    displayTweets(accounts[0]);
+    await contract.methods.tweet(content).send({ from: accounts[0] });
+    getTweets(accounts[0]);
   } catch (error) {
     console.error("user rejected:", error);
   }
 }
 
-async function displayTweets(userAddress) {
+async function getTweets(userAddress) {
   const tweetsContainer = document.getElementById("tweetsContainer");
   tweetsContainer.innerHTML = "";
-  const tempTweets = await Contract.methods.getAlltweets(userAddress).call;
+  const tempTweets = await contract.methods.getAllTweets(userAddress).call();
   const tweets = [...tempTweets];
-  tweets.sort((a, b) => b.timestamp - a.timestamp);
+  tweets.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
   for (let i = 0; i < tweets.length; i++) {
     const tweetElement = document.createElement("div");
     tweetElement.className = "tweet";
 
     const userIcon = document.createElement("img");
     userIcon.className = "user-Icon";
-    userIcon.src = `https://avatars.dicebear.com/api/human/${tweets[i].author}.svg`;
+    userIcon.src = `https://api.dicebear.com/9.x/pixel-art/svg`;
     userIcon.alt = "User Icon";
 
     tweetElement.appendChild(userIcon);
@@ -83,23 +83,56 @@ async function displayTweets(userAddress) {
 }
 
 function addLikeButtonListener(likeButton, address, id, author) {
-  likeButton.addEventlistener("click", async (e) => {
+  likeButton.addEventListener("click", async (e) => {
     e.preventDefault();
     e.currentTarget.innerHTML = `<div class=
     "spinner"></div>`;
     e.currentTarget.disabled = true;
     try {
-      await liketweet(author, id);
-      displayTweets(address);
+      await likeTweet(author, id);
+      getTweets(address);
     } catch (error) {
       console.error("Error liking tweet:", error);
     }
   });
 }
 
+function shortAddress(address, startLength = 6, endLength = 4) {
+  return `${address.slice(0, startLength)}...${address.slice(-endLength)}`;
+}
+
+async function likeTweet(author, id) {
+  try {
+    const accounts = await web3.eth.getAccounts();
+    await contract.methods.likeTweet(author, id).send({ from: accounts[0] });
+  } catch (error) {
+    console.error("User rejected request:", error);
+  }
+}
+
 function setConnected(address) {
   document.getElementById("userAddress").innerText =
-    "connected" + shortAddress(address);
+    "connected " + shortAddress(address);
   document.getElementById("connectMessage").style.display = "none";
-  document.getElementById(tweetForm).style.display = "block";
+  document.getElementById("connectBtn").style.display = "none";
+  document.getElementById("tweetForm").style.display = "block";
+  getTweets(address);
 }
+document.getElementById("connectBtn").addEventListener("click", connectWallet);
+
+document.getElementById("tweetForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const content = document.getElementById("tweetContent").value;
+  const tweetSubmitButton = document.getElementById("tweetSubmitBtn");
+  tweetSubmitButton.innerHTML = `<div class ="spinner"></div>`;
+  tweetSubmitButton.disabled = true;
+
+  try {
+    await createTweet(content);
+  } catch (error) {
+    console.error("Errror sending tweet:", error);
+  } finally {
+    tweetSubmitButton.innerHTML = "Tweet";
+    tweetSubmitButton.disabled = false;
+  }
+});
